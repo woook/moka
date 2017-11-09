@@ -17,13 +17,14 @@ import os
 
 # import from config file
 import ImportPrimerconfig as config
+# import database details from connection file
 import ImportPrimerDBConnections as connection
 
 class ImportPrimer():
 	def __init__(self):
 		# using pyodbc specify database connection details
-		self.cnxn = pyodbc.connect(connection.mokadata_connection) # use the mokadata database connection details specified in the config file
-		#self.cnxn = pyodbc.connect(connection.dev_database_connection) # use the devdatabase database connection details specified in the config file
+		self.cnxn = pyodbc.connect(connection.mokadata_connection) # use the mokadata database connection details specified in the connection file
+		#self.cnxn = pyodbc.connect(connection.dev_database_connection) # use the devdatabase database connection details specified in the connection file
 		# create a cursor to connect to database 
 		self.cursor = self.cnxn.cursor()
 		
