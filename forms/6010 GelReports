@@ -12,10 +12,9 @@ Private Sub CreateReport_Click()
     
     
     ''Call ssh_n_run script
-    ' define the variables to feed to EvE
     Dim pythonScriptPath As String
     Dim args As String
-    Dim TotalCmd As String
+    Dim TotalCMD As String
     Dim cmd_to_run_on_server As String
     
     ' set the command that is to be run on the server
@@ -29,9 +28,9 @@ Private Sub CreateReport_Click()
 
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
-    TotalCmd = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & pythonScriptPath & """" & cmd_to_run_on_server & GEL_Participant_ID & " -h " & remove_header & """ 2>&1"
+    TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & pythonScriptPath & """" & cmd_to_run_on_server & GEL_Participant_ID & " -h " & remove_header & """ 2>&1"
     
-    Debug.Print TotalCmd
+    Debug.Print TotalCMD
     
     
     'Create shell object
@@ -39,8 +38,8 @@ Private Sub CreateReport_Click()
     Set wsh = CreateObject("WScript.Shell")
     
     ' use .Exec not .Run so can access the stdout
-    Set wshexec = wsh.Exec(TotalCmd)
-    'DoEvents pauses VB script until EvE has finished running. wshexec.status is 0 while running 1 when finished
+    Set wshexec = wsh.Exec(TotalCMD)
+    'DoEvents pauses VB script until python script has finished running. wshexec.status is 0 while running 1 when finished
     ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
     Do While wshexec.Status = 0
         DoEvents
