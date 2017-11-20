@@ -9,6 +9,8 @@ Private Sub Copy_Click()
     Dim origPanCat As Integer
     Dim origPanSubCat As Integer
     Dim panIns As ADODB.Recordset
+    Dim panInsSQL As String
+    Dim sqlGeneIns As String
     Dim stDocName As String
     Dim stLinkCriteria As String
     If Not IsNull(Me!s87000_NGSPanels.Form!PanelCode) Then
