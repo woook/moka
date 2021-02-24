@@ -1,0 +1,18 @@
+CREATE VIEW [dbo].[v_ArrayStatus]
+AS
+SELECT        { fn CONCAT(RIGHT(dbo.Arrays.ArrayBarCode, 3) + '.', dbo.ArrayLabelling.Subarray) } AS hybid, dbo.Referral.Referral, dbo.Status.Status, dbo.ArrayTest.SpecimenNo, dbo.ArrayTest.ReportDate, 
+                         dbo.Checker.Initials AS Analysed, Checker_1.Initials AS Updated, Checker_2.Initials AS Checked, Checker_3.Initials AS Reported, Checker_4.Initials AS Authorised, Checker_5.Initials AS [2nd_Authorised], 
+                         dbo.ArrayTest.ArrayResultDate AS LastUpdated, dbo.ArrayTest.ArrayTestID, dbo.ArrayTest.InternalPatientID
+FROM            dbo.Arrays INNER JOIN
+                         dbo.ArrayLabelling ON dbo.Arrays.ArrayID = dbo.ArrayLabelling.ArrayID INNER JOIN
+                         dbo.ArrayTest ON dbo.ArrayLabelling.DNALabellingID = dbo.ArrayTest.DNALabellingID INNER JOIN
+                         dbo.Status ON dbo.ArrayTest.StatusID = dbo.Status.StatusID INNER JOIN
+                         dbo.Referral ON dbo.ArrayTest.ReferralID = dbo.Referral.ReferralID LEFT OUTER JOIN
+                         dbo.Checker AS Checker_2 ON dbo.ArrayTest.Check2ID = Checker_2.Check1ID LEFT OUTER JOIN
+                         dbo.Checker AS Checker_3 ON dbo.ArrayTest.Check3ID = Checker_3.Check1ID LEFT OUTER JOIN
+                         dbo.Checker AS Checker_4 ON dbo.ArrayTest.Check4ID = Checker_4.Check1ID LEFT OUTER JOIN
+                         dbo.Checker ON dbo.ArrayTest.Check1ID = dbo.Checker.Check1ID LEFT OUTER JOIN
+                         dbo.Checker AS Checker_1 ON dbo.ArrayTest.Check15ID = Checker_1.Check1ID LEFT OUTER JOIN
+                         dbo.Checker AS Checker_5 ON dbo.ArrayTest.Check5ID = Checker_5.Check1ID
+
+GO
