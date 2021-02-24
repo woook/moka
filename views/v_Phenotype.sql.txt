@@ -1,0 +1,6 @@
+CREATE VIEW [dbo].[v_Phenotype]
+AS
+SELECT        InternalPatientID, Phenotype, PhenotypeID
+FROM            dbo.Phenotype
+
+GO

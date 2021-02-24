@@ -1,0 +1,17 @@
+CREATE VIEW [dbo].[v_ArrayAnalysis]
+AS
+SELECT        dbo.ArrayOligoPreliminaryResults.InternalPatientID, dbo.Chromosome.Chr, dbo.ArrayOligoPreliminaryResults.Band19, dbo.ArrayOligoPreliminaryResults.Start19, dbo.ArrayOligoPreliminaryResults.Stop19, 
+                         dbo.ArrayOligoPreliminaryResults.Stop19 - dbo.ArrayOligoPreliminaryResults.Start19 + 1 AS size, dbo.ArrayOligoPreliminaryResults.Ratio_1, dbo.ArrayOligoPreliminaryResults.Probes, 
+                         dbo.Change.Change AS CNV_Confirmation, Change_1.Change AS Copies, Status_2.Status AS WholeChromosome, dbo.Inheritance.Inheritance, Status_1.Status AS Pathogenic, 
+                         dbo.Status.Status AS ReportPrenatally, dbo.ArrayOligoPreliminaryResults.Comment, dbo.ArrayOligoPreliminaryResults.OligoResultID, dbo.ArrayTest.ArrayTestID
+FROM            dbo.ArrayOligoPreliminaryResults INNER JOIN
+                         dbo.Chromosome ON dbo.ArrayOligoPreliminaryResults.ChrID19 = dbo.Chromosome.ChrID INNER JOIN
+                         dbo.ArrayTest ON dbo.ArrayOligoPreliminaryResults.DNALabellingID = dbo.ArrayTest.DNALabellingID AND dbo.ArrayOligoPreliminaryResults.InternalPatientID = dbo.ArrayTest.InternalPatientID LEFT OUTER JOIN
+                         dbo.Status ON dbo.ArrayOligoPreliminaryResults.ReportPrenatally = dbo.Status.StatusID LEFT OUTER JOIN
+                         dbo.Change ON dbo.ArrayOligoPreliminaryResults.ChangeID = dbo.Change.ChangeID LEFT OUTER JOIN
+                         dbo.Change AS Change_1 ON dbo.ArrayOligoPreliminaryResults.Copies = Change_1.ChangeID LEFT OUTER JOIN
+                         dbo.Inheritance ON dbo.ArrayOligoPreliminaryResults.InheritanceID = dbo.Inheritance.InheritanceID LEFT OUTER JOIN
+                         dbo.Status AS Status_1 ON dbo.ArrayOligoPreliminaryResults.Pathogenic = Status_1.StatusID FULL OUTER JOIN
+                         dbo.Status AS Status_2 ON dbo.ArrayOligoPreliminaryResults.WholeChromosome = Status_2.StatusID
+
+GO

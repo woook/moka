@@ -1,0 +1,10 @@
+CREATE VIEW [dbo].[v_PatientDetails]
+AS
+SELECT        dbo.[gwv-patientlinked].LastName, dbo.[gwv-patientlinked].FirstName, dbo.[gwv-patientlinked].PatientTrustID AS PRU, dbo.[gwv-patientlinked].Gender, dbo.[gwv-patientlinked].DoB, dbo.Status.Status, 
+                         dbo.ResultCode.ResultCode, dbo.ResultCode.CodeDescription, dbo.Patients.InternalPatientID
+FROM            dbo.Patients INNER JOIN
+                         dbo.[gwv-patientlinked] ON dbo.Patients.PatientID = dbo.[gwv-patientlinked].PatientTrustID INNER JOIN
+                         dbo.Status ON dbo.Patients.s_StatusOverall = dbo.Status.StatusID LEFT OUTER JOIN
+                         dbo.ResultCode ON dbo.Patients.OverallResultCodeID = dbo.ResultCode.ResultCodeID
+
+GO
