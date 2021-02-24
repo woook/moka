@@ -1,0 +1,172 @@
+Option Compare Database
+
+Private Sub Form_Open(Cancel As Integer)
+'On Error GoTo Err_Form_Open
+
+Do While Not Recordset.EOF
+    
+    Dim Q As ADODB.Recordset
+    Set Q = New ADODB.Recordset
+    Dim S As String
+    Dim d As String
+    Dim t As String
+    Dim p As String
+    
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    t = VBA.Environ("USERNAME")
+    p = VBA.Environ("COMPUTERNAME")
+        
+    If IsNull(Me.IPID) Then
+
+        Dim i As String
+        Dim c As String
+        Dim x As String
+        Dim ln As String
+        Dim fn As String
+        Dim u As String
+        Dim b As String
+        
+        If Not IsNull(Me![CreatedDate]) Then
+            i = Format(Me![CreatedDate], "dd/mmm/yyyy Hh:Nn:ss")
+            Else
+            i = "01/Jan/1901 00:00:00"
+        End If
+        If Not IsNull(Me![CreatedBy]) Then
+            c = Me![CreatedBy]
+            Else
+            c = "unknown"
+        End If
+        If Not IsNull(Me![Sex]) Then
+            x = Left(Me![Sex], 1)
+            Else
+            x = "U"
+        End If
+        If Not IsNull(Me![LastName]) Then
+            ln = Me![LastName]
+            ln = Replace(ln, "'", "''")
+            Else
+            ln = "unknown"
+        End If
+        If Not IsNull(Me![FirstName]) Then
+            fn = Me![FirstName]
+            fn = Replace(fn, "'", "''")
+            Else
+            fn = "unknown"
+        End If
+        If Not IsNull(Me![s_StatusOverall]) Then
+            u = Me![s_StatusOverall]
+            Else
+            u = 1202218789
+        End If
+        If Not IsNull(Me![DoB]) Then
+            b = Format(Me![DoB], "dd/mm/yyyy Hh:Nn:ss")
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + u + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "',#" + b + "#,'" + c + "',#" + i + "#)"
+            '                                                                                                                                                                                                       PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinDOB, BookinCreatedBy, BookinCreatedDate
+            Else
+            S = "INSERT INTO Patients(PatientID, s_StatusOverall, MokaCreated, MokaCreatedBy, MokaCreatedPC, BookinLastName, BookinFirstName, BookinSex, BookinCreatedBy, BookinCreatedDate) VALUES ('" & Me![PatientID] & "','" + u + "',#" + d + "#,'" + t + "','" + p + "','" + ln + "','" + fn + "','" + x + "','" + c + "',#" + i + "#)"
+        End If
+    
+        Q.Open S, CurrentProject.Connection
+        Set Q = Nothing
+        
+    End If
+        
+    Recordset.MoveNext
+    Loop
+
+DoCmd.GoToRecord , , acFirst
+Me.Requery
+
+Exit_Form_Open:
+    Exit Sub
+
+Err_Form_Open:
+    MsgBox Err.Description
+    Resume Exit_Form_Open
+
+End Sub
+
+Private Sub Command34_Click()
+On Error GoTo Err_Command34_Click
+
+If IsNull(Me.worksheet) Then
+    MsgBox "Enter worksheet number", , "Don't be a dummy"
+    Else
+    
+    Dim d As String
+    Dim t As String
+    Dim p As String
+    Dim S As String
+    Dim ws As String
+    Dim ds As String
+    Dim di As String
+    Dim tc As String
+    Dim ip As String
+    Dim tr As String
+    Dim st As String
+    Dim dn As String
+    d = Format(Now, "dd/mmm/yyyy Hh:Nn:ss")
+    t = VBA.Environ("USERNAME")
+    p = VBA.Environ("COMPUTERNAME")
+    ws = Me!worksheet
+    ds = Me!SpecimenNo
+    di = Me!Disorder
+    tc = Me!TestClass
+    ip = Me!IPID
+    tr = Me!RequestID
+    st = 1202218790
+    dn = Me!DNANo
+    
+    S = "INSERT INTO uFraxRequest(InternalPatientID, DNATestRequestID, StatusID, DNASpecimenNo, DNANumber, Disorder, TestClass, DateRequested) VALUES ('" + ip + "','" + tr + "','" + st + "','" + ds + "','" + dn + "','" + di + "','" + tc + "','" + d + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL S
+    DoCmd.SetWarnings True
+    
+    S = "INSERT INTO uWorksheet(WorksheetName, DNASpecimenNo, Disorder, TestClass) VALUES ('" + ws + "','" + ds + "','" + di + "','" + tc + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL S
+    DoCmd.SetWarnings True
+    
+'    debuggin
+'        Dim msg As String
+'        msg = S
+'        MsgBox msg, , "Don't be a dummy"
+'    end debuggin
+
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + ip + ",'FRAX: Request added for DNA specimen no " + ds + "',#" + d + "#,'" + t + "','" + p + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL S
+    DoCmd.SetWarnings True
+
+    S = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + ip + ",'FRAX: DNA specimen no " + ds + " added to worksheet " + ws + "',#" + d + "#,'" + t + "','" + p + "')"
+    DoCmd.SetWarnings False
+    DoCmd.RunSQL S
+    DoCmd.SetWarnings True
+
+    d = vbNullString
+    t = vbNullString
+    p = vbNullString
+    S = vbNullString
+    ws = vbNullString
+    ds = vbNullString
+    di = vbNullString
+    tc = vbNullString
+    ip = vbNullString
+    S = vbNullString
+    tr = vbNullString
+    st = vbNullString
+    dn = vbNullString
+    
+End If
+    
+
+
+Exit_Command34_Click:
+    Exit Sub
+
+Err_Command34_Click:
+    MsgBox Err.Description
+    Resume Exit_Command34_Click
+    
+End Sub
+

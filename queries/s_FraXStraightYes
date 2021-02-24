@@ -1,0 +1,4 @@
+SELECT s_FraXStraight.RequestID, s_FraXStraight.Disorder, s_FraXStraight.TestClass, s_FraXStraight.SpecimenNo, s_FraXStraight.DateReceived, s_FraXStraight.DNANo, s_FraXStraight.Concentration As Conc, s_FraXStraight.Name, s_FraXStraight.Sex, s_FraXStraight.DateRequested
+FROM s_FraXStraight
+UNION SELECT s_FraXYes.RequestID, s_FraXYes.Disorder, s_FraXYes.TestClass, s_FraXYes.SpecimenNo, s_FraXYes.DateReceived, s_FraXYes.DNANo, s_FraXYes.Concentration As Conc, s_FraXYes.Name, s_FraXYes.Sex, s_FraXYes.DateRequested
+FROM s_FraXYes
