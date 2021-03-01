@@ -1,4 +1,4 @@
-SELECT DISTINCT Chromosome.Chr, PrimerAmplicon.Start19, PrimerAmplicon.Stop19, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, Status.Status, PrimerAmplicon.Notes, PrimerAmplicon.PrimerName, PrimerAmplicon.AmpliconID
+SELECT DISTINCT Chromosome.Chr, PrimerAmplicon.Start19, PrimerAmplicon.Stop19, PrimerAmplicon.ForwardSeq, PrimerAmplicon.ReverseSeq, Status.Status, PrimerAmplicon.Notes, PrimerAmplicon.PrimerName, PrimerAmplicon.AmpliconID, PrimerAmplicon.Manufacturer
 FROM (PrimerAmplicon INNER JOIN Status ON PrimerAmplicon.Status = Status.StatusID) INNER JOIN Chromosome ON PrimerAmplicon.ChromosomeID = Chromosome.ChrID
 WHERE (((Status.Status)="Designed - awaiting ordering"))
 ORDER BY PrimerAmplicon.PrimerName;
