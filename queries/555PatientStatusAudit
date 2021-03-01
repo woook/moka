@@ -1,1 +1,4 @@
-
+SELECT DISTINCT Patients.PatientID, dbo_Patient.LastName, dbo_Patient.FirstName, Status.Status, Referral.Referral, Patients.s_StatusOverall, dbo_Specimen.DateReceived
+FROM ((((Patients INNER JOIN dbo_Patient ON Patients.PatientID = dbo_Patient.PatientID) INNER JOIN Status ON Patients.s_StatusOverall = Status.StatusID) INNER JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID) INNER JOIN dbo_Specimen ON ArrayTest.SpecimenNo = dbo_Specimen.SpecimenTrustID) INNER JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID
+WHERE (((Patients.s_StatusOverall)<>1 And (Patients.s_StatusOverall)<>4 And (Patients.s_StatusOverall)<>5 And (Patients.s_StatusOverall)<>1202218787)))
+ORDER BY dbo_Patient.LastName, dbo_Patient.FirstName;
