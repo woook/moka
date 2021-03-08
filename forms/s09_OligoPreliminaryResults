@@ -1,5 +1,10 @@
 Option Compare Database
 
+''on open
+Private Sub Form_Current()
+    Me.DNALabellingID.Requery
+End Sub
+
 Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
 ''When manually inporting a CNV from 100K want to record the NGStestID, internalpatientid and other required fields in the row
     
