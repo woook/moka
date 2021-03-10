@@ -1,9 +1,13 @@
 Option Compare Database
 
-''on open
-Private Sub Form_Current()
-    Me.DNALabellingID.Requery
-End Sub
+Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
+''When manually inporting a CNV from 100K want to record the NGStestID, internalpatientid and other required fields in the row
+    
+    If IsNull(Me.Probes) Then
+        Me.Probes.Value = 0
+        Me.NGSTestID.Value = Me.Parent.NGSTestID
+        
+    End If
 
 Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
 ''When manually inporting a CNV from 100K want to record the NGStestID, internalpatientid and other required fields in the row
@@ -31,6 +35,19 @@ End Sub
 
 Private Sub Comment_DblClick(Cancel As Integer)
   DoCmd.RunCommand acCmdZoomBox
+  
+End Sub
+
+''alt previous findings
+Private Sub Form_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_Previous"
+    stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
+
 End Sub
 
 '' The report prenatally field must be populated if class 4 or class 5
@@ -55,6 +72,7 @@ Private Sub Form_DblClick(Cancel As Integer)
     stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
 
 '' Open variant assessment form
 Private Sub Pathogenic_DblClick(Cancel As Integer)
@@ -337,7 +355,7 @@ Private Sub Copies_DblClick(Cancel As Integer)
         stopping = CStr(Format(Me.Stop19, "###,###,###"))
         ''form sentance for dels and dups
         If Me.Copies = 1190384936 Then
-            sentance = "This test identified a deletion of approximately " + Siz + "Mb from "
+            sentance = "This test identified an interstitial deletion of approximately " + Siz + "Mb from "
             If bands = 1 Then
                 sentance = sentance + "band " + band1 + " in " + whicharm + whichchr + ", between base pair coordinates " + starting + " and " + stopping + "."
             ElseIf bands = 2 Then
