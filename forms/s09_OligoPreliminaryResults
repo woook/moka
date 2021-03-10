@@ -9,6 +9,15 @@ Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
         
     End If
 
+Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
+''When manually inporting a CNV from 100K want to record the NGStestID, internalpatientid and other required fields in the row
+    
+    If IsNull(Me.Probes) Then
+        Me.Probes.Value = 0
+        Me.NGStestID.Value = Me.Parent.NGStestID
+        
+    End If
+
         
 End Sub
 
@@ -26,6 +35,7 @@ End Sub
 
 Private Sub Comment_DblClick(Cancel As Integer)
   DoCmd.RunCommand acCmdZoomBox
+  
 End Sub
 
 ''alt previous findings
@@ -36,6 +46,33 @@ Private Sub Form_DblClick(Cancel As Integer)
     stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
     DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
 End Sub
+
+
+End Sub
+
+'' The report prenatally field must be populated if class 4 or class 5
+'' this function prevents a class 4 or 5 classification being entered when the report prenatally field is null
+Private Sub Pathogenic_BeforeUpdate(Cancel As Integer)
+    ' if pathogenic status is any of the class 4 or class 5 categories
+    If Me![Pathogenic] = 1202218783 Or Me![Pathogenic] = 1202218788 Or Me![Pathogenic] = 1202218792 Or Me![Pathogenic] = 1202218791 Then
+        ' if the report prenatally is also null
+        If IsNull(Me.ReportPrenatally) Then
+            ' show message box and cancel any changes
+            MsgBox ("Please ensure causative/secondary finding is recorded if class 4 or 5")
+            Cancel = True
+        End If
+    End If
+End Sub
+
+''alt previous findings
+Private Sub Form_DblClick(Cancel As Integer)
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "s09_Previous"
+    stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
+    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
+End Sub
+
 
 '' Open variant assessment form
 Private Sub Pathogenic_DblClick(Cancel As Integer)
@@ -80,15 +117,17 @@ End Sub
 ''dgv
 Private Sub Start19_DblClick(Cancel As Integer)
     Dim url As String
-    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ";h_region=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + ""
-    url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    'url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 50000) + ";ref=chr" + Me![ChrID19].Column(1) + ";h_region=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + ".." + CStr(Me.Stop19) + ""
+    'url = "http://dgv.tcag.ca/gb2/gbrowse/dgv2_hg19/?start=" + CStr(Me.Start19 - 500000) + ";stop=" + CStr(Me.Stop19 + 500000) + ";ref=chr" + Me![ChrID19].Column(1) + ""
+    url = "https://dosage.clinicalgenome.org/region_search.cgi?loc=chr" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19) + "-" + CStr(Me.Stop19)
     'chromeurlserv url
+    'url = "https://decipher.sanger.ac.uk/browser#q/" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000) + "/location/" + Me![ChrID19].Column(1) + ":" + CStr(Me.Start19 - 500000) + "-" + CStr(Me.Stop19 + 500000)
     firefoxurl url
 End Sub
 
 Private Sub Start_DblClick(Cancel As Integer)
     Dim url As String
-    url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg18/?start=" + CStr(Me.Start - 500000) + ";stop=" + CStr(Me.Stop + 500000) + ";ref=chr" + Me![ChrID].Column(1) + ";h_region=chr" + Me![ChrID].Column(1) + ":" + CStr(Me.Start) + ".." + CStr(Me.Stop) + ""
+    url = "http://projects.tcag.ca/cgi-bin/variation/gbrowse/hg18/?start=" + CStr(Me.Start - 50000) + ";stop=" + CStr(Me.Stop + 50000) + ";ref=chr" + Me![ChrID].Column(1) + ";h_region=chr" + Me![ChrID].Column(1) + ":" + CStr(Me.Start) + ".." + CStr(Me.Stop) + ""
     'chromeurlserv url
     firefoxurl url
 End Sub
