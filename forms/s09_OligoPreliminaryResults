@@ -29,17 +29,6 @@ Private Sub Comment_DblClick(Cancel As Integer)
   
 End Sub
 
-''alt previous findings
-Private Sub Form_DblClick(Cancel As Integer)
-    Dim stDocName As String
-    Dim stLinkCriteria As String
-    stDocName = "s09_Previous"
-    stLinkCriteria = "[ChrID19]=" & Me![ChrID19]
-    DoCmd.OpenForm stDocName, acFormDS, , stLinkCriteria
-End Sub
-
-
-End Sub
 
 '' The report prenatally field must be populated if class 4 or class 5
 '' this function prevents a class 4 or 5 classification being entered when the report prenatally field is null
