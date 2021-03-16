@@ -5,15 +5,6 @@ Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
     
     If IsNull(Me.Probes) Then
         Me.Probes.Value = 0
-        Me.NGSTestID.Value = Me.Parent.NGSTestID
-        
-    End If
-
-Private Sub chrID_38_BeforeUpdate(Cancel As Integer)
-''When manually inporting a CNV from 100K want to record the NGStestID, internalpatientid and other required fields in the row
-    
-    If IsNull(Me.Probes) Then
-        Me.Probes.Value = 0
         Me.NGStestID.Value = Me.Parent.NGStestID
         
     End If
