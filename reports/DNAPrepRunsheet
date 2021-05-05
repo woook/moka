@@ -1,0 +1,55 @@
+Option Compare Database
+Option Explicit
+
+Dim linecount As Integer
+
+Private Sub Reset()
+    linecount = 0
+    Detail.BackColor = 16777215
+    DNANumber.BackColor = 16777215
+    Report!Name.BackColor = 16777215
+    Concentration.BackColor = 16777215
+    GelQualityID.BackColor = 16777215
+    DNAComment.BackColor = 16777215
+End Sub
+
+Private Sub Detail_Print(Cancel As Integer, PrintCount As Integer)
+    linecount = linecount + 1
+
+    If linecount = 9 Then
+        linecount = 1
+    End If
+
+'    RowID.Caption = Mid("ABCDEFGH", LineCount, 1)
+
+    If linecount Mod 2 = 0 Then
+'        RowID.Caption = "       " + RowID.Caption
+        Detail.BackColor = 12632256
+        DNANumber.BackColor = 12632256
+        From.BackColor = 12632256
+        Report!Name.BackColor = 12632256
+        Concentration.BackColor = 12632256
+        GelQualityID.BackColor = 12632256
+        DNAComment.BackColor = 12632256
+    Else
+        Detail.BackColor = 16777215
+        DNANumber.BackColor = 16777215
+        From.BackColor = 16777215
+        Report!Name.BackColor = 16777215
+        Concentration.BackColor = 16777215
+        GelQualityID.BackColor = 16777215
+        DNAComment.BackColor = 16777215
+    End If
+
+End Sub
+
+Private Sub Report_Open(Cancel As Integer)
+    Reset
+End Sub
+
+
+Private Sub Report_Page()
+    Reset
+End Sub
+
+
