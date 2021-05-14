@@ -1,0 +1,4 @@
+SELECT Consumable.Consumable, Consumable.Description, Consumable.Size, Consumable.CompanyID, Consumable.CatalogueNo, Consumable.SAPCode, Consumable.Quote, Consumable.QuoteEndDate, Consumable.Price, Consumable.ConsumableID, Consumable.Note, Consumable.Active, Consumable.CompanyURL
+FROM Consumable
+WHERE (((Consumable.Active)=1202218774))
+ORDER BY Consumable.Consumable, Consumable.Size;
