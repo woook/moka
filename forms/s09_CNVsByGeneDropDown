@@ -1,0 +1,36 @@
+''Select gene region from dropdown box
+Private Sub Combo13_AfterUpdate()
+    Dim dbs As DAO.Database
+    Dim qdf As DAO.QueryDef
+    Dim GeneSymbol As String
+    Dim GeneStart As Long
+    Dim GeneEnd As Long
+    Dim GeneChrom As Integer
+    Dim strSQL As String
+    
+    GeneSymbol = Combo13.Column(0)
+    GeneChrom = CInt(Replace(Replace(Replace(Combo13.Column(1), "chr", ""), "X", "23"), "Y", "24"))
+    GeneStart = Combo13.Column(2)
+    GeneEnd = Combo13.Column(3)
+    
+    strSQL = "SELECT DISTINCT Chromosome.Chr, ArrayOligoPreliminaryResults.Start19, ArrayOligoPreliminaryResults.Stop19, ArrayOligoPreliminaryResults.Stop19-ArrayOligoPreliminaryResults.Start19+1 AS Size19, " _
+& "ArrayOligoPreliminaryResults.Probes, ArrayOligoPreliminaryResults.Ratio_1, ArrayOligoPreliminaryResults.Ratio_2, ArrayOligoPreliminaryResults.InternalPatientID, " _
+& "Patients.PatientID,  Change.Change AS CNVType, Inheritance.Inheritance, Status.Status AS WholeChr, Change_1.Change AS Copies, ArrayDyeSwap.DyeSwap AS OldAnalysisID, " _
+& "ArrayOligoPreliminaryResults.Start AS Start18, ArrayOligoPreliminaryResults.Stop AS Stop18, ArrayOligoPreliminaryResults.Band19, " _
+& "Status_1.Status AS Pathogenicity, Referral.Referral FROM" _
+& "(((((((((((ArrayOligoPreliminaryResults INNER JOIN Patients ON ArrayOligoPreliminaryResults.InternalPatientID = Patients.InternalPatientID) LEFT JOIN Change ON ArrayOligoPreliminaryResults.CNVTypeID = Change.ChangeID) " _
+& "LEFT JOIN Inheritance ON ArrayOligoPreliminaryResults.InheritanceID = Inheritance.InheritanceID) LEFT JOIN ArrayLabelling ON ArrayOligoPreliminaryResults.DNALabellingID = ArrayLabelling.DNALabellingID)" _
+& "LEFT JOIN Arrays ON ArrayLabelling.ArrayID = Arrays.ArrayID) LEFT JOIN Status ON ArrayOligoPreliminaryResults.WholeChromosome = Status.StatusID) LEFT JOIN Change AS Change_1 ON ArrayOligoPreliminaryResults.Copies = Change_1.ChangeID) " _
+& "LEFT JOIN ArrayTest ON Patients.InternalPatientID = ArrayTest.InternalPatientID)" _
+& "LEFT JOIN Referral ON ArrayTest.ReferralID = Referral.ReferralID)" _
+& "LEFT JOIN ArrayDyeSwap ON ArrayOligoPreliminaryResults.DyeSwapID = ArrayDyeSwap.DyeSwapID) INNER JOIN Chromosome ON ArrayOligoPreliminaryResults.ChrID19 = Chromosome.ChrID) LEFT JOIN Status AS Status_1 ON ArrayOligoPreliminaryResults.Pathogenic = Status_1.StatusID " _
+& "WHERE (ArrayOligoPreliminaryResults.CNVTypeID)<>1190384925 AND (ArrayOligoPreliminaryResults.CNVTypeID)<>1190384918 And (ArrayOligoPreliminaryResults.CNVTypeID)<>1190384919 And (ArrayOligoPreliminaryResults.CNVTypeID)<>1190384933 " _
+& "AND (Chromosome) = " & GeneChrom & " AND " & GeneEnd & " >=[ArrayOligoPreliminaryResults].[Start19] And " & GeneStart & " <=[ArrayOligoPreliminaryResults].[Stop19];"
+
+
+Me.s09_CNVsByGene.SourceObject = "Query.PlaceHolderQuery"
+Me.s09_CNVsByGene.Form.RecordSource = strSQL
+Me.s09_CNVsByGene.Requery
+
+End Sub
+      
