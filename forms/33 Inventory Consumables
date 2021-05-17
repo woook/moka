@@ -1,0 +1,43 @@
+Option Compare Database
+
+Private Sub CompanyID_Change()
+    Form_s33_CompanyDetails.Requery
+End Sub
+
+Private Sub Command23_Click()
+On Error GoTo Err_Command23_Click
+
+    Dim stDocName As String
+    Dim stLinkCriteria As String
+
+    stDocName = "32 Add Company"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+
+Exit_Command23_Click:
+    Exit Sub
+
+Err_Command23_Click:
+    MsgBox Err.Description
+    Resume Exit_Command23_Click
+    
+End Sub
+
+''' <summary>
+''' Method to open text strings representing an URL, adds http prefix if missing.
+''' </summary>
+
+Private Sub txtHyperlinkFullAddress_DblClick(Cancel As Integer)
+On Error GoTo txtHyperlinkFullAddress_Click_Err
+Dim url As String
+    If Not IsNull(Me.txtHyperlinkFullAddress.Value) Then
+        url = Me.txtHyperlinkFullAddress.Value
+            If Left(url, 4) <> "http" Then
+            url = "http://" & url
+            End If
+    Application.FollowHyperlink url
+    End If
+Exit Sub
+txtHyperlinkFullAddress_Click_Err:
+    Call MsgBox("Error " & Err.Number & " - " & Err.Description & " (in " & Me.Name & ".txtHyperlinkFullAddress_Click)")
+
+End Sub
