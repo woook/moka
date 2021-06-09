@@ -286,7 +286,7 @@ for txt_file in os.listdir("H:/04_automating_moka_project"):
             pass # everything's been save to the txt file don't need to anything else 
         else:
             print('back up save')
-            message ='As the original file was still open and couldn't be written too, this additional file was made. If the original file has since been closed, the text should now appear '
+            message ='As the original file was still open and couldnt be written too, this additional file was made. If the original file has since been closed, the text should now appear '
             df_check['Back_up'] = message 
             df_check.to_csv(stripped_txt+'_log.txt', sep ='\t', index = False)  # print to a new file incase the original one is open
 '''
@@ -296,3 +296,4 @@ except:
     df['Processed'] = message 
     df.to_csv(stripped_txt+'.txt', sep ='\t', index = False)   
     df.to_csv(stripped_txt+'_log.txt', sep ='\t', index = False)
+'''
