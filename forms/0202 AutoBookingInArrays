@@ -1,0 +1,61 @@
+Option Compare Database
+
+'Patients are auto booked into moka using this form
+' A txt file exported from GW will be exported to the BookingInPath
+' A python script then checks and inserts the patients and/or the tests within the txt form into moka
+'The form then refreshes, so that tests which have just been imported can be further booked on by the user
+
+Private Sub Command19_Click()
+
+Dim BookingInPath As String ' used to capture the ImportTxtToDB.py path
+Dim TotalCMD As String ' string which is used to build the command which executes the python script
+
+'set path to python script
+'BookingInPath = """\\gstt.local\Apps\Moka\Files\Software\ImportTxtToDB.py"""
+BookingInPath = """\\gstt.local\shared\Genetics_Data2\Moka_dev\erin_dev\auto_booking_array_test\ImportTxtToDB.py"""
+    
+
+' Flag to user to close txt to help with script writing logging messages
+
+If MsgBox("Have you closed the txt file you'd like to book in?", vbYesNoCancel, "Txt file closed?") _
+    = vbYes Then
+    MsgBox "Thanks! Script will now run", , "Running script"
+    'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
+    ' note 2>&1 which combines stderr and stdout
+    '/C means "execute this command as if I had typed it at the prompt, then quit"
+    '/S means you don't have to worry about quotes, removing first and last quotes, but leaving all others untouched.
+    TotalCMD = "cmd.exe /S /C \\gstt.local\shared\Genetics_Data2\Array\Software\Python\python.exe " & BookingInPath & " 2>&1"
+    
+    Debug.Print TotalCMD
+    
+     'Create shell object
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    ' use .Exec not .Run so can access the stdout
+    Set wshexec = wsh.Exec(TotalCMD)
+    'Debug.Print wshexec.Stdout.readall()
+    'DoEvents pauses VB script until import script has finished running. wshexec.status is 0 while running 1 when finished
+    ' and 2 when errored so could use a if statement but have combined stderr and stdout above so no need.
+    Do While wshexec.Status = 0
+        DoEvents
+    Loop
+    
+    'report captures stdout
+    Dim Report As String
+    Report = wshexec.stdout.readall()
+    
+    Debug.Print Report
+    
+    'display in MsgBox
+    MsgBox CStr(Report)
+    
+
+    Else
+    MsgBox " Please close the txt file before clicking the button again", , "Close txt file"
+    End If
+    
+' Requery form to show new patients imported
+Form![s0202_AutoBookingInArrays].Requery
+
+
+End Sub
