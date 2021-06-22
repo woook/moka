@@ -4,16 +4,20 @@ config for ImportTxtToDB script
 
 '''
 
-scriptversion = "0.1" # Please update when the script is updated
+scriptversion = "1.0" # Please update when the script is updated
 
 ''' == Paths == '''
-path =   r"\\gstt.local\shared\Genetics_Data2\Moka_dev\erin_dev\auto_booking_array_test" # Path to files to be imported 
+#path =   r"\\gstt.local\shared\Genetics_Data2\Moka_dev\erin_dev\auto_booking_array_test" # Test path to files to be imported 
+
+path = r"\\gstt.local\shared\Genetics\Scanned array paperwork" # to double check this path at UA
 processed_path =   path + "\\Booked\\" # path for files to be moved to when completed 
 
 ''' == Moka codes == '''
 status_inprogress = '3'
 status_array = '15'
-status_arraytobebookedin = '1202218857'
-#1202218871 for go live
-referral_arraytobebookedin = '1199901225'
-#1199901236 for go live
+status_arraytobebookedin = '1202218871'
+
+#1202218857 in moka dev
+referral_arraytobebookedin = '1199901236'
+
+#1199901225 in moka dev
