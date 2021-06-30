@@ -11,14 +11,12 @@ Dim BookingInPath As String ' used to capture the ImportTxtToDB.py path
 Dim TotalCMD As String ' string which is used to build the command which executes the python script
 
 'set path to python script
-'BookingInPath = """\\gstt.local\Apps\Moka\Files\Software\ImportTxtToDB.py"""
-BookingInPath = """\\gstt.local\shared\Genetics_Data2\Moka_dev\erin_dev\auto_booking_array_test\ImportTxtToDB.py"""
+BookingInPath = """\\gstt.local\Apps\Moka\Files\Software\AutoBookingInArrays\ImportTxtToDB.py"""
     
 
 ' Flag to user to close txt to help with script writing logging messages
 
-If MsgBox("Have you closed the txt file you'd like to book in?", vbYesNoCancel, "Txt file closed?") _
-    = vbYes Then
+If MsgBox("Have you closed the txt file you'd like to book in?", vbYesNoCancel, "Txt file closed?") = vbYes Then
     MsgBox "Thanks! Script will now run", , "Running script"
     'combine all to make totalCmd NB /K can be used for the cmd line window to remain after it has run - good for debugging - but may cause it to hang
     ' note 2>&1 which combines stderr and stdout
@@ -48,11 +46,10 @@ If MsgBox("Have you closed the txt file you'd like to book in?", vbYesNoCancel, 
     
     'display in MsgBox
     MsgBox CStr(Report)
-    
-
-    Else
+Else
     MsgBox " Please close the txt file before clicking the button again", , "Close txt file"
-    End If
+
+End If
     
 ' Requery form to show new patients imported
 Form![s0202_AutoBookingInArrays].Requery
