@@ -26,10 +26,7 @@ import sys
 import argparse 
 import numpy as np
 
-# Define global variables 
-global patient_error
-global test_error
-global error_occurred 
+
 
 # Read config file(must be called config.ini and stored in the same directory as script)
 config_parser = ConfigParser()
@@ -101,11 +98,11 @@ def import_check_patients_table_moka(df_row):
     stopping other parts of the script running and for debugging.
 
     INPUT: The label (df_row) of the current row of the df that is being looped through by the script 
-    RETURN: None
+    RETURN: patient_error for error handling
 
     '''
-    # Define global variable for use in this function 
-    global patient_error
+    # Define patient_error boolean 
+    patient_error = False 
     # See if the function can run 
     try:
         # Check if patient is in the patients table
@@ -258,6 +255,7 @@ def import_check_patients_table_moka(df_row):
         error_list.append(error)
         error_list.append(SQL_error)
         error_list.append(e)
+    return(patient_error)
 
 # Test booking function ========================================================================
 
@@ -273,8 +271,8 @@ def import_check_array_table_moka(df_row):
     RETURN: None
 
     '''
-    # Define global variable for use in this function 
-    global test_error
+    #  Define test_error boolean
+    test_error = False 
     # See if the function can run
     try:
         # Check a test for this SpecimenTrustID is already in the ArrayTest table 
@@ -419,6 +417,7 @@ def import_check_array_table_moka(df_row):
         error_list.append(error)
         error_list.append(SQL_error)
         error_list.append(e)
+    return(test_error)
     
 # Error handling ========================================================================
 
@@ -432,8 +431,6 @@ def error_handling():
     RETURN: None
 
     '''
-    # Define global variable for use in this function 
-    global error_occurred
     # Count for number of samples which have errors & how many have passed 
     count_failed = 0 
     count_passed = 0
@@ -512,10 +509,8 @@ def txt_file_variables():
     date_time = date_time_three_sf(t) 
     # List to collect errors for debugging
     error_list = [] 
-    patient_error = False 
-    test_error = False
     error_occurred = False 
-    return(date_time, error_list, patient_error, test_error, error_occurred)
+    return(date_time, error_list, error_occurred)
 
 '''================== One off variables =========================== '''
 # Instantiate moka connector
@@ -532,7 +527,7 @@ try:
         # Look for all .txt files in the folder  
         if file.endswith(".txt"):
             # Define variables here to reset when each new .txt file is loaded 
-            date_time, error_list, patient_error, test_error, error_occurred = txt_file_variables() 
+            date_time, error_list, error_occurred = txt_file_variables() 
             to_process_path = os.path.join(config.path+"/"+file)
             # Each row of this df is an single patient 
             df = pd.read_csv(to_process_path, delimiter = "\t")
@@ -551,14 +546,14 @@ try:
                 if df.loc[df_row,'Processed_status'] == 0:
                     # Attempt to book Patient into Moka 
                     # patient_error boolean will be set to True in the function if an error does occur     
-                    import_check_patients_table_moka(df_row)
+                    patient_error = import_check_patients_table_moka(df_row)
                     if patient_error == True: 
                         df.loc[df_row,'Processed_status'] = 'FAILED' 
                         error_occurred = True
                     else: 
                         # Run ArrayTable function for those rows which didn't fail
                         # test_error boolean will be set to True in the function if an error does occur
-                        import_check_array_table_moka(df_row) 
+                        test_error = import_check_array_table_moka(df_row) 
                         if test_error == True: 
                             df.loc[df_row,'Processed_status'] = 'FAILED'
                             error_occurred = True
