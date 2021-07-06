@@ -1,0 +1,10 @@
+Option Compare Database
+
+Private Sub PatientID_DblClick(Cancel As Integer)
+' user double cicks on patient ID to book in the rest of the test
+ Dim stDocName As String
+    Dim stLinkCriteria As String
+    stDocName = "010 Add array request"
+    stLinkCriteria = "[PatientID]=" & "'" & Me![PatientID] & "'"
+    DoCmd.OpenForm stDocName, , , stLinkCriteria
+End Sub
