@@ -268,7 +268,7 @@ def import_check_array_table_moka(df_row):
     stopping other parts of the script running and for debugging.
 
     INPUT: The index of the current row of the df that is being looped through by the script 
-    RETURN: None
+    RETURN: test_error for error handling
 
     '''
     #  Define test_error boolean
