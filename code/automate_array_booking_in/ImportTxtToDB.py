@@ -8,7 +8,7 @@ It is linked to the 0202 AutoBookingInArrays form
 
 Use --d to get more verbose error messages printed to the terminal 
 
-All SQL statements are commented with DEBUG if returns need to be checked 
+All SQL statements are commented with DEBUG if these need to be added to the error messages
 If a row has failed at the Patients stage, search for DEBUG PATIENT
 If a row has failed at the Test stage, search for DEBUG TEST
 
@@ -25,6 +25,11 @@ import ImportTxtToDBConfig as config
 import sys
 import argparse 
 import numpy as np
+
+# Define global variables 
+global patient_error
+global test_error
+global error_occurred 
 
 # Read config file(must be called config.ini and stored in the same directory as script)
 config_parser = ConfigParser()
@@ -86,7 +91,7 @@ def arg_parse():
 
 
 # Patient booking function ==========================================
-def import_check_patients_table_moka(patient_error, df_row):
+def import_check_patients_table_moka(df_row):
     '''
     This function takes the label of the current row of the df being looped through (df_row)
     df.loc then finds the data in that row, in the column header named in the script eg. df.loc[df_row, "SpecimenTrustID"] 
@@ -96,11 +101,11 @@ def import_check_patients_table_moka(patient_error, df_row):
     stopping other parts of the script running and for debugging.
 
     INPUT: The label (df_row) of the current row of the df that is being looped through by the script 
-    and the patient_error flag which will be set to false initially.
+    RETURN: None
 
-    RETURNS: The entire df to be put into the next function & the boolean 
-    response to patient_error 
     '''
+    # Define global variable for use in this function 
+    global patient_error
     # See if the function can run 
     try:
         # Check if patient is in the patients table
@@ -113,7 +118,7 @@ def import_check_patients_table_moka(patient_error, df_row):
             SpecimenTrust_ID = df.loc[df_row, "SpecimenTrustID"] 
         )
         check_patient_results = mc.fetchall(check_patient_sql) 
-        # print(check_patient_results) #DEBUG PATIENT
+        #error_list.append(check_patient_results) #DEBUG PATIENT
         # Check if SELECT has returned any rows 
         # If this returns >1 there's two patients with this spec number in Moka, NOT GOOD 
         if len(check_patient_results) > 1: 
@@ -138,7 +143,7 @@ def import_check_patients_table_moka(patient_error, df_row):
             ).format(
                 SpecimenTrust_ID = df.loc[df_row,"SpecimenTrustID"] 
             )
-            #print(get_patient_ID_sql) #DEBUG PATIENT
+            #error_list.append(get_patient_ID_sql) #DEBUG PATIENT
             # Run SQL, returns a list of tuples
             get_patient_ID_result = mc.fetchall(get_patient_ID_sql) 
             # get_patient_ID_result returns the result of a query in a list of tuples, 
@@ -195,48 +200,51 @@ def import_check_patients_table_moka(patient_error, df_row):
                         Staff_username = username,
                         Staff_PC = computer_name
                     )
-                    #print(insert_patient_sql) # DEBUG PATIENT
+                    #error_list.append(insert_patient_sql) # DEBUG PATIENT
                     mc.execute(insert_patient_sql) 
                     # Return the primary key (InternalPatientID) for new insert
-                    patients_table_primary_key = mc.fetchone("SELECT @@IDENTITY")[0]                   
-                    # Insert into patients log
-                    insert_log_patient_sql = ("INSERT INTO PatientLog([InternalPatientID], [LogEntry], [Date], [Login], [PCName]) "
-                                "VALUES ('{Patient_ID}', 'New Patient added to Patients table {Patient_ID} "
-                                "using the Automating booking in arrays script version {Script_version}',"
-                                "'{Created_date}', '{Staff_username}' , '{Staff_PC}')" 
-                    ).format(
-                        Patient_ID = patients_table_primary_key, 
-                        Script_version = config.scriptversion, 
-                        Created_date= date_time,
-                        Staff_username = username,
-                        Staff_PC = computer_name
-                    )  
-                    mc.execute(insert_log_patient_sql) 
+                    patients_table_primary_key = mc.fetchone("SELECT @@IDENTITY")[0]
+                    # Check all info from the txt and returned primary key is correct
                     check_patient_insert_sql = ("SELECT [Patients].[InternalPatientID] "
                                     "FROM [Patients]" 
-                                    "WHERE [PatientID]='{Patient_ID}' AND [BookinLastName]= '{Last_Name}' "
+                                    "WHERE [InternalPatientID] =  '{Internal_PT_ID}' AND [PatientID]='{Patient_ID}' AND [BookinLastName]= '{Last_Name}' "
                                     "AND [BookinFirstName]= '{First_Name}' AND [BookinSex]= '{Sex}' "
                                     "AND [BookinDOB] = '{Date_of_birth}' AND [MokaCreated]='{Created_date}'"
-                ).format(
-                    Patient_ID = PatientTrustID,
-                    Last_Name = df.loc[df_row,"LastName"],
-                    First_Name = df.loc[df_row,"FirstName"],
-                    Sex = df.loc[df_row,"Gender"],
-                    Date_of_birth = Patient_DOB,
-                    Created_date= date_time,
-                )
-                    #print(check_patient_insert_result) # DEBUG PATIENT
+                    ).format(
+                        Internal_PT_ID = patients_table_primary_key,
+                        Patient_ID = PatientTrustID,
+                        Last_Name = df.loc[df_row,"LastName"],
+                        First_Name = df.loc[df_row,"FirstName"],
+                        Sex = df.loc[df_row,"Gender"],
+                        Date_of_birth = Patient_DOB,
+                        Created_date= date_time,
+                    )
+                    #error_list.append(check_patient_insert_result) # DEBUG PATIENT
                     check_patient_insert_result = mc.fetchall(check_patient_insert_sql) 
+                    
                     # If this returns 1, the patient has been added successfully 
                     if len(check_patient_insert_result) == 1: 
                         df.loc[df_row,'Patient_Moka_status'] = "Success"
+                        # Add this successful addition to the patient log 
+                        insert_log_patient_sql = ("INSERT INTO PatientLog([InternalPatientID], [LogEntry], [Date], [Login], [PCName]) "
+                                "VALUES ('{Internal_PT_ID}', 'New Patient added to Patients table {Internal_PT_ID} "
+                                "using the Automating booking in arrays script version {Script_version}',"
+                                "'{Created_date}', '{Staff_username}' , '{Staff_PC}')" 
+                        ).format(
+                            Internal_PT_ID = patients_table_primary_key, 
+                            Script_version = config.scriptversion, 
+                            Created_date= date_time,
+                            Staff_username = username,
+                            Staff_PC = computer_name
+                        )  
+                        mc.execute(insert_log_patient_sql) 
                     else: 
                         error = ("ERROR: Inserting {SpecimenTrust_ID} into Patient's table failed "
                     ).format(
                         SpecimenTrust_ID = df.loc[df_row,"SpecimenTrustID"] ) 
                         error_list.append(error)
                         df.loc[df_row,'Patient_Moka_status'] = 'Failed'
-                        patient_error = True
+                        patient_error = True                                      
     # If the function fails in an unexpected way 
     except Exception as e:
         patient_error = True  
@@ -250,11 +258,10 @@ def import_check_patients_table_moka(patient_error, df_row):
         error_list.append(error)
         error_list.append(SQL_error)
         error_list.append(e)
-    return(patient_error, df) 
 
 # Test booking function ========================================================================
 
-def import_check_array_table_moka(test_error, df_row):
+def import_check_array_table_moka(df_row):
     '''
     This function checks if there is a test in the ArrayTest table for the Patient.
     If there isn't a test or if there is at test and the status is Pending (2), Complete (4) or Not Possible (5) another test is added.
@@ -263,12 +270,12 @@ def import_check_array_table_moka(test_error, df_row):
     stopping other parts of the script running and for debugging.
 
     INPUT: The index of the current row of the df that is being looped through by the script 
-    and the test_error flag which will be set to false.
+    RETURN: None
 
-    RETURNS: The entire df to be put into the next function & the boolean 
-    response to test_error which shows if there were any errors
     '''
-    # See if the function can run 
+    # Define global variable for use in this function 
+    global test_error
+    # See if the function can run
     try:
         # Check a test for this SpecimenTrustID is already in the ArrayTest table 
         # but does not have the status pending, complete or not possible 
@@ -282,7 +289,7 @@ def import_check_array_table_moka(test_error, df_row):
                         ).format(
                             SpecimenTrust_ID = df.loc[df_row,"SpecimenTrustID"] 
                         )
-        #print(check_ArrayTest_sql) # DEBUG TEST
+        #error_list.append(check_ArrayTest_sql) # DEBUG TEST
         check_ArrayTest_result = mc.fetchall(check_ArrayTest_sql) 
         # If this returns 1, there is an ongoing test already
         if len(check_ArrayTest_result) == 1:   
@@ -299,7 +306,7 @@ def import_check_array_table_moka(test_error, df_row):
         ).format(
                 SpecimenTrust_ID = df.loc[df_row,"SpecimenTrustID"] 
             )
-            #print(get_Array_data_sql) # DEBUG TEST
+            #error_list.append(get_Array_data_sql) # DEBUG TEST
             # get_Array_data_sql_result returns the result of a query in a list of tuples, 
             # where the tuple contains (InternalPatientID, SpecimenID, CreatedDate)
             get_Array_data_sql_result = mc.fetchall(get_Array_data_sql)
@@ -310,12 +317,12 @@ def import_check_array_table_moka(test_error, df_row):
             ).format(
                 Staff_username = username
             )
-            #print(get_check1ID_sql) # DEBUG TEST
+            #error_list.append(get_check1ID_sql) # DEBUG TEST
             date_to_squish = get_Array_data_sql_result[0][2]
             # Make datetime three SF
             adjusted_referall_date = date_time_three_sf(date_to_squish) 
             get_check1ID_result = mc.fetchall(get_check1ID_sql)
-            insert_ArrayTest_sql = ("INSERT INTO [ArrayTest] ([InternalPatientID], [GWSpecID], [ReferralID],[StatusID], "
+            insert_ArrayTest_sql = ("INSERT INTO [ArrayTest] ([InternalPatientID], [GWSpecID], [ReferralID], [StatusID], "
                                         "[RequestedDate], [BookedByID]) "
                                         " VALUES ('{Patient_ID}','{GW_Spec_no}', '{Patient_referral}','{Patient_Status}', "
                                         " '{Requested_date}',  '{Booked_in_by}')" 
@@ -332,36 +339,25 @@ def import_check_array_table_moka(test_error, df_row):
                 # where the tuple contains a single entry (Check1ID)
                 Booked_in_by = get_check1ID_result[0][0]
             )
-            #print(insert_ArrayTest_sql) # DEBUG TEST
+            #error_list.append(insert_ArrayTest_sql) # DEBUG TEST
             mc.execute(insert_ArrayTest_sql)
             # Return the newly generated ArrayTestID
             arraytest_primary_key = mc.fetchone("SELECT @@IDENTITY")[0] 
-            insert_patient_log_array_sql = ("INSERT INTO PatientLog([InternalPatientID], [LogEntry], [Date], [Login], [PCName])"
-                                    "VALUES ('{Patient_ID}', 'New ArrayTest {Array_test_ID}"
-                                    " using the Automating booking in arrays script version {Script_version}' ,"
-                                    " '{Created_date}', '{Staff_username}' , '{Staff_PC}')" 
-            ).format(
-                Patient_ID = get_Array_data_sql_result[0][0], 
-                Array_test_ID = arraytest_primary_key,
-                Script_version = config.scriptversion,
-                Created_date = date_time,
-                Staff_username = username,
-                Staff_PC = computer_name
-            )  
-            mc.execute(insert_patient_log_array_sql)  
             # Check arraytestID and InternalPatientID match those in the txt file 
             check_arraytest_after_insert_sql = ("SELECT [ArrayTest].[ArrayTestID]"
                                         "FROM [ArrayTest] INNER JOIN [Patients] ON [ArrayTest].[InternalPatientID] = "
                                         " [Patients].[InternalPatientID]  "
                                         "WHERE [ArrayTest].[ArrayTestID] = '{Array_test_ID}' AND [Patients].[InternalPatientID] = '{Patient_ID}'"
-                                        " AND [Patients].[BookinLastName]= '{Last_Name}' AND [Patients].[BookinFirstName]= '{First_Name}' "                   
+                                        " AND [Patients].[BookinLastName]= '{Last_Name}' AND [Patients].[BookinFirstName]= '{First_Name}' "
+                                        " AND [ArrayTest].[StatusID] = '{Patient_Status}' "                   
             ).format(
                 Array_test_ID = arraytest_primary_key,
                 Patient_ID = get_Array_data_sql_result[0][0],
                 Last_Name = df.loc[df_row,"LastName"],
-                First_Name = df.loc[df_row,"FirstName"]
+                First_Name = df.loc[df_row,"FirstName"],
+                Patient_Status = config.status_arraytobebookedin
             )
-            #print(check_arraytest_after_insert_sql) # DEBUG TEST 
+            #error_list.append(check_arraytest_after_insert_sql) # DEBUG TEST 
             check_arraytest_after_insert_result = mc.fetchall(check_arraytest_after_insert_sql)
             # If this returns 1, the patient has successfully been booked in 
             if len(check_arraytest_after_insert_result) != 1: 
@@ -374,6 +370,20 @@ def import_check_array_table_moka(test_error, df_row):
             else:
                 test_error = False
                 df.loc[df_row,'Booking_in_sample_status'] = 'Success' 
+                # Update patient log
+                insert_patient_log_array_sql = ("INSERT INTO PatientLog([InternalPatientID], [LogEntry], [Date], [Login], [PCName])"
+                                    "VALUES ('{Patient_ID}', 'New ArrayTest {Array_test_ID}"
+                                    " using the Automating booking in arrays script version {Script_version}' ,"
+                                    " '{Created_date}', '{Staff_username}' , '{Staff_PC}')" 
+                ).format(
+                    Patient_ID = get_Array_data_sql_result[0][0], 
+                    Array_test_ID = arraytest_primary_key,
+                    Script_version = config.scriptversion,
+                    Created_date = date_time,
+                    Staff_username = username,
+                    Staff_PC = computer_name
+                )  
+                mc.execute(insert_patient_log_array_sql)  
                 # Update Patients status in the Patients table to Array
                 update_patient_status_sql = ("UPDATE [Patients] "   
                                     " SET [s_StatusOverall] = '{Patient_Status}'"
@@ -382,7 +392,7 @@ def import_check_array_table_moka(test_error, df_row):
                     Patient_Status = config.status_array,
                     Patient_ID = get_Array_data_sql_result[0][0]
                 )
-                #print(sql_update_status) # DEBUG TEST 
+                #error_list.append(sql_update_status) # DEBUG TEST 
                 mc.execute(update_patient_status_sql)
                 insert_patient_log_status_sql = ("INSERT INTO PatientLog([InternalPatientID], [LogEntry], [Date], [Login], [PCName]) "
                                         "VALUES ('{Patient_ID}', 'Patient status updated to Array " 
@@ -397,8 +407,7 @@ def import_check_array_table_moka(test_error, df_row):
                 )  
                 mc.execute(insert_patient_log_status_sql) 
     # If the function fails in an unexpected way 
-    except Exception as e:
-        
+    except Exception as e:      
         test_error = True 
         df.loc[df_row,'Booking_in_sample_status'] = 'Error' 
         SQL_error = "This is the SQL error:"
@@ -410,24 +419,21 @@ def import_check_array_table_moka(test_error, df_row):
         error_list.append(error)
         error_list.append(SQL_error)
         error_list.append(e)
-    return(test_error, df)
     
 # Error handling ========================================================================
 
-def error_handling(df, error_occurred):
+def error_handling():
     '''
     Checks df for error messages.
-    Returns statement to user in Moka 
+    Prints success or fail statement to user in Moka 
     Extra logging if debug flag used 
 
-    INPUTS: Dataframe which has been populated with information from a txt file
-    and altered to add information about patient and arraytest insertions/checks passing or failing 
-    Error_occurred flag, which will be a boolean and also reflect passing and failing of script before it 
-
-
-    RETURNS: error_occurred is a boolean passed to the next function save_move_txt
+    INPUT: None
+    RETURN: None
 
     '''
+    # Define global variable for use in this function 
+    global error_occurred
     # Count for number of samples which have errors & how many have passed 
     count_failed = 0 
     count_passed = 0
@@ -443,8 +449,6 @@ def error_handling(df, error_occurred):
             error_occurred = True 
         elif df.loc[df_row,'Processed_status'] == 'Completed':
             count_passed +=1 
-         # else: 
-           #   count = count + 0   ======= to remove if works ok ===================
         # if this is the last row of the df, get the count of failed rows                     
         if df_row == len(df) - 1:
             if count_failed >= 1:
@@ -452,25 +456,19 @@ def error_handling(df, error_occurred):
                 print('An error occurred in ' +str(count_failed)+' sample/s. Please see the txt file for error messages') 
             else:
                 print('Success! ' +str(count_passed)+' sample/s imported into Moka with no errors' ) 
-    return(error_occurred)
 
 # Save & move txt file ========================================================================
 
-def save_move_txt(df, error_occurred,to_process_path, file):
+def save_move_txt(to_process_path, file):
     '''
     Save the df to the same txt file 
     If no errors occurred, it moves the file to the /Booked directory 
 
-    INPUTS: Dataframe which has been populated with information from a txt file
-    and altered to add information about patient and arraytest insertions/checks passing or failing 
-    Error_occurred flag, which will be a boolean and also reflect passing and failing of script at either patient or test stage 
-    to_process_path is defined at the start of the loop as the path to the txt tile
+    INPUT: to_process_path is defined at the start of the loop as the path to the txt tile
     file is the name of the txt file currently being processed by the script
-
-    RETURNS: Nothing 
+    RETURN: None  
 
     '''
-
     df.to_csv(to_process_path, sep ='\t', index = False)            
     # If no errors, move file to /Booked directory
     if error_occurred != True: 
@@ -485,8 +483,6 @@ def save_move_txt(df, error_occurred,to_process_path, file):
             print("All test successfully completed but there's another file already in the /Booked folder with this file name. Please move manually")  
     else:
         print('File not moved to /Booked folder due to a processing failure')                   
-    #return(df, error_occurred)
-
 
 
 # Make date time three significant figures =========================== 
@@ -501,16 +497,14 @@ def date_time_three_sf(t):
     t = t.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     return(t)
 
-
 # Define variables ===============
 
 def txt_file_variables():
     '''
     Refreshes variables for txt file
 
-    INPUTS: None
-
-    RETURNS: Variables refereshed for each txt file that is run through the script
+    INPUT: None
+    RETURN: Variables refereshed for each txt file that is run through the script
     '''
     # Get the current date time
     t = datetime.datetime.now() 
@@ -518,10 +512,10 @@ def txt_file_variables():
     date_time = date_time_three_sf(t) 
     # List to collect errors for debugging
     error_list = [] 
-    patient_error_status = False 
-    test_error_status = False
+    patient_error = False 
+    test_error = False
     error_occurred = False 
-    return(date_time, error_list, patient_error_status, test_error_status, error_occurred)
+    return(date_time, error_list, patient_error, test_error, error_occurred)
 
 '''================== One off variables =========================== '''
 # Instantiate moka connector
@@ -533,13 +527,12 @@ computer_name = socket.gethostname()
 args = arg_parse()
 
 '''================== Run script =========================== ''' 
-
 try:
     for file in os.listdir(config.path):
         # Look for all .txt files in the folder  
         if file.endswith(".txt"):
             # Define variables here to reset when each new .txt file is loaded 
-            date_time, error_list, patient_error_status, test_error_status, error_occurred = txt_file_variables() 
+            date_time, error_list, patient_error, test_error, error_occurred = txt_file_variables() 
             to_process_path = os.path.join(config.path+"/"+file)
             # Each row of this df is an single patient 
             df = pd.read_csv(to_process_path, delimiter = "\t")
@@ -557,18 +550,16 @@ try:
                 # Don't re run a row that's already been processed  
                 if df.loc[df_row,'Processed_status'] == 0:
                     # Attempt to book Patient into Moka 
-                    # patient_error boolean set to false when first calling the function 
-                    #  and it will be set to True in the function if an error does occur       
-                    patient_error_status, df = import_check_patients_table_moka(False, df_row) 
-                    if patient_error_status == True: 
+                    # patient_error boolean will be set to True in the function if an error does occur     
+                    import_check_patients_table_moka(df_row)
+                    if patient_error == True: 
                         df.loc[df_row,'Processed_status'] = 'FAILED' 
                         error_occurred = True
                     else: 
                         # Run ArrayTable function for those rows which didn't fail
-                        # test_error boolean set to false when first calling the function 
-                        # and it will be set to True in the function if an error does occur
-                        test_error_status, df  = import_check_array_table_moka(False, df_row) 
-                        if test_error_status == True: 
+                        # test_error boolean will be set to True in the function if an error does occur
+                        import_check_array_table_moka(df_row) 
+                        if test_error == True: 
                             df.loc[df_row,'Processed_status'] = 'FAILED'
                             error_occurred = True
                         else:
@@ -577,13 +568,11 @@ try:
                 # Check if this is the last row of the data frame
                 if df_row == len(df) - 1:
                     # Run error handling, additional prints if debug flag used 
-                    error_occurred = error_handling(df, error_occurred) 
+                    error_handling() 
                     # Run save and move 
-                    save_move_txt(df, error_occurred, to_process_path, file)                              
+                    save_move_txt(to_process_path, file)                              
 except: 
     # Print to user in Moka 
     print('ERROR: Script not run. Send the below error message to Bioinformatics team') 
     if args.debug == True:
         print('Script unexpectedly broken', sys.exc_info()[0]) # Print the error to the terminals 
-
-
