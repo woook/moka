@@ -1159,7 +1159,7 @@ Private Sub StatusID_AfterUpdate()
                 ElseIf Me.StatusID = 1202218816 Then
                        '  Display the pop up box once for each group instead of for each patient in test group
                         ' Using GroupTypeID ensures trios and duo are captured here
-                        If Counter < 1 And Me.GroupTypeID = 14 Then
+                        If Counter < 1 And rsTestGroup![ReferralID] = 1199901233 Or rsTestGroup![ReferralID] = 1199901234 Then
                             If (rsTestGroup.RecordCount > 1) And MsgBox("NGSTestID " & Me.[NGSTestID] & " is in a group of " & rsTestGroup.RecordCount & " tests. You are about to update the status of all other tests in this group to test failed. Continue?", vbYesNo Or vbExclamation, "Update all tests in referral group?") = vbNo Then
                             Cancel = True
                             Exit Sub
