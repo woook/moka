@@ -1090,7 +1090,7 @@ Private Sub StatusID_AfterUpdate()
                     ' In a trio, display the pop up box once for each group instead of for each patient in test group
                      If Counter < 1 Then
                         If MsgBox("This test has already been assigned to WES Batch: " & Me![WESBatch] & vbNewLine & "Continuing will remove " & rsTestGroup.RecordCount & " test from this WES Batch." & vbNewLine & vbNewLine & "Do you wish to proceed?", vbYesNo Or vbExclamation, "TEST ALREADY ASSIGNED TO WES BATCH") = vbNo Then
-                        Selection = 0 ' User wants to cancel
+                        Selection = 0 ' User wants to cancelre
                         Else
                         Selection = 1 ' User wants to continue
                         Counter = Counter + 1
@@ -1447,14 +1447,14 @@ Private Sub Checker3_AfterUpdate()
     'If reporter removes signiture, removal is logged and data cleared
     If IsNull(Me!Checker3) Then
         If Not IsNull(Me.txt_Check3Date) Then
-            ' As the NGStest status is automatically updated frollwing completion of a report,if the reporter ID is removed after the report has been compleated
+            ' As the NGStest status is automatically updated following completion of a report,if the reporter ID is removed after the report has been completed
             '(txt_Check3Date is not null) the NGStest status must be updated too. By default the NGS test is set to Assessment and the user is notified.
             
             Me.StatusID = 1202218807 ' update NGStest status to 'Assessment'
             Me.txt_Check3Date = Null ' remove reported date.
             
             ' SQLs to record changes in log files.
-            rpt_log = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test initials for reporting have been removed and NGSTest status set to " + Me![StatusID].Column(1) + " (as default) for for NGS test " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
+            rpt_log = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test initials for reporting have been removed and NGSTest status set to " + Me![StatusID].Column(1) + " (as default) for NGS test " + CStr(Me![DateRequested]) + "',#" + dt + "#,'" + usr + "','" + cn + "')"
             status_log = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ", 1, " + CStr(Me![NGSTestID]) + ",'Reporter ID has been removed. NGS Test status set to: " + Me![StatusID].Column(1) + " (as default)' ,#" + dt + "#,'" + usr + "','" + cn + "')"
             
             ' update record of status change
@@ -1518,6 +1518,7 @@ Private Sub Checker3_AfterUpdate()
         Me.txt_Check3Date = Null
     End If
     
+    
     Me.Parent.Requery
 
 End Sub
@@ -1574,6 +1575,12 @@ Private Sub txt_Check3Date_DblClick(Cancel As Integer)
         ngslog.Open teststatus_log, CurrentProject.Connection
         Set ngslog = Nothing
         
+        ' Make sure any changes to the proband are also made to the parents in a trio or a duo
+        If Me.[Referral] = "WES Trio" Or Me.[Referral] = "WES Duo" Then
+            Debug.Print "Calling status ID update button !"
+            Call StatusID_AfterUpdate
+        End If
+        
         ' lock down form
         Me.StatusID.Locked = True
         Me.Parent.Form.Requery
@@ -1603,7 +1610,7 @@ Private Sub Checker4_AfterUpdate()
     cn = VBA.Environ("COMPUTERNAME")
       
     
-    If IsNull(Me!Checker4) Then  ' If approver removes signiture, removal is logged chage patient status back to NGS
+    If IsNull(Me!Checker4) Then  ' If approver removes signiture, removal is logged change patient status back to NGS
         Me.txt_Check4Date = Null
         
         ck = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" + CStr(Me![InternalPatientID]) + ",'NGS: WES test Report Approval ID, removed for NGS test requested. NGSTest status set to default (Pending Report Authorsation)',#" + dt + "#,'" + usr + "','" + cn + "')"
@@ -1611,7 +1618,7 @@ Private Sub Checker4_AfterUpdate()
         rs.Open ck, CurrentProject.Connection
         U.Open v, CurrentProject.Connection
         
-        'check is patient status had been updated is so, revert to NGS upon intial deleation
+        'check is patient status had been updated is so, revert to NGS upon intial deletion
         
                  If Me.Parent.[Patient status] = "Complete" Or Me.Parent.[Patient status] = "Test Failed" Then
                      Set P = New ADODB.Recordset
