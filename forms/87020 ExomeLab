@@ -1,8 +1,6 @@
 Option Compare Database
 Private includeReferrals As String
 Private includeReferrals_view As String
-
-
 Private Sub btn_ExomeStatus_Click()
     DoCmd.OpenForm "87018 ExomeStatus"
 End Sub
@@ -46,7 +44,6 @@ Dim AllTotal As Long
 Cmb_Approver.Visible = False
 ' Deselct all selected samples
 Check_selectAll.Value = False
-
 
 
 'refresh selection count
@@ -215,12 +212,12 @@ Dim AllTotal As Long
 Call Unselect
     
 ' reload subform calling query to view all
- ' Use view to speed up query
+' Use view to speed up query
+' This SQL will return all patient in the view with the includeReferrals filtering
           
  subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
             " FROM s87020_ListWESSamples_view " & _
-            " WHERE " & includeReferrals_view & " AND (((s87020_ListWESSamples_view.StatusID)<>1202218787 And (s87020_ListWESSamples_view.StatusID)<>4 " & _
-            " And (s87020_ListWESSamples_view.StatusID)<>1202218816)) " & _
+            " WHERE " & includeReferrals_view & " " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
 
 [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
@@ -241,7 +238,6 @@ Me.txt_SelectionCount = selTotal
     Me.cmb_StatusView.Value = Null
 Call update_display
 End Sub
-
 
 Private Sub btn_NoWESBatch_Click()
 Dim subfrmSQL As String
@@ -279,18 +275,16 @@ Dim AllTotal As Long
 Call Unselect
     
  ' Use view to speed up query
-subfrmSQL = "SELECT s87020_ListWESSamples_view.*" & _
+subfrmSQL = " SELECT s87020_ListWESSamples_view.*" & _
             " FROM s87020_ListWESSamples_view  " & _
             " WHERE " & includeReferrals_view & " AND s87020_ListWESSamples_view.StatusID = 1202218807 And s87020_ListWESSamples_view.Check1Date Is Null " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
-'Debug.Print subfrmSQL
 
 [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
 
 'refresh selection and total count
 strCriteria = "TestStatus = '1202218807' AND Checker1 is Null "
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples_view", strCriteria)
-'Debug.Print AllTotal
 Me.txt_TotalTally = AllTotal
 
 selTotal = DCount("[Selection]", "s87020_ListWESSamples_view", "[Selection] = True")
@@ -318,34 +312,28 @@ Dim AllTotal As Long
 Call Unselect
 
 ' Use view to speed up query
+' This query finds all the patients who still require a second check e.g. checker1 initials and date completed but check2date is null
  subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
         " FROM s87020_ListWESSamples_view  " & _
-        "  WHERE " & includeReferrals_view & " AND (((s87020_ListWESSamples_view.StatusID) <> 1202218787 " & _
-        " And (s87020_ListWESSamples_view.StatusID) <> 4 And (s87020_ListWESSamples_view.StatusID) <> 1202218816) And ((s87020_ListWESSamples_view.Checker1) Is Not Null) " & _
+        "  WHERE " & includeReferrals_view & " And ((s87020_ListWESSamples_view.Checker1) Is Not Null) " & _
         " And ((s87020_ListWESSamples_view.Check1Date) Is Not Null) And ((s87020_ListWESSamples_view.Check2Date) Is Null)) " & _
         " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested; "
         
-'Debug.Print subfrmSQL
-            
 [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
 
 'refresh selection and total count
 strCriteria = " Checker1 is not null And  Checker2 is Null "
 AllTotal = DCount("NGSTestID", "s87020_ListWESSamples_view", strCriteria)
-'Debug.Print AllTotal
 Me.txt_TotalTally = AllTotal
-
 selTotal = DCount("[Selection]", "s87020_ListWESSamples_view", "[Selection] = True")
 Me.txt_SelectionCount = selTotal
 
 End Sub
 
-
 Private Sub cmb_BatchView_Click()
 Dim subfrmSQL As String
 Dim AllTotal As Long
 Dim strCriteria As String
-
 
 ' deselect any selected files and set the select all check box to empty
 Call Unselect
@@ -362,12 +350,12 @@ Call Unselect
 If Not IsNull(Me!cmb_BatchView) Then
     If IsNull(cmb_StatusView) Then
  ' Use view to speed up query
+ ' This query filters the dashboard to show only patients including in the user selected batch
           subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
             " FROM s87020_ListWESSamples_view  " & _
-            " WHERE " & includeReferrals_view & " And ((s87020_ListWESSamples_view.StatusID) <> 1202218787) And s87020_ListWESSamples_view.NGSWESBatchID = " & CStr(Me![cmb_BatchView]) & " " & _
+            " WHERE " & includeReferrals_view & " And s87020_ListWESSamples_view.NGSWESBatchID = " & CStr(Me![cmb_BatchView]) & " " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
                                         
-        'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
         Call update_display
         Me.txt_displayed = Me.txt_displayed & " in batch " + Me![cmb_BatchView].Column(1)
@@ -376,18 +364,15 @@ If Not IsNull(Me!cmb_BatchView) Then
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "'"
         AllTotal = DCount("WESBatch", "s87020_ListWESSamples_view", strCriteria)
         Me.txt_TotalTally = AllTotal
-        'Debug.Print strCriteria
-        'Debug.Print AllTotal
-        
     ' else display the subform filtered on batch and status option if a status has aready been selected
     Else
- ' Use view to speed up query
+        ' Use view to speed up query
+        ' This query filters the dashboard to show only patients including in the user selected batch and the user selected status
         subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
             " FROM s87020_ListWESSamples_view " & _
             " WHERE " & includeReferrals_view & " And ((s87020_ListWESSamples_view.StatusID) = " & CStr(cmb_StatusView) & ") And s87020_ListWESSamples_view.NGSWESBatchID = " & CStr(Me![cmb_BatchView]) & "  " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
                     
-        'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
         Call update_display
         Me.txt_displayed = Me.txt_displayed & " in Batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
@@ -396,8 +381,6 @@ If Not IsNull(Me!cmb_BatchView) Then
         strCriteria = " WESBatch = '" & Me.cmb_BatchView.Column(1) & "' AND TestStatus = '" & Me.cmb_StatusView.Column(1) & "'"
         AllTotal = DCount("WESBatch", "s87020_ListWESSamples_view", strCriteria)
         Me.txt_TotalTally = AllTotal
-        'Debug.Print strCriteria
-        'Debug.Print AllTotal
         
     End If
 End If
@@ -452,13 +435,13 @@ Call Unselect
 ' if WES batch filter = null do normal SQL
 If Not IsNull(cmb_StatusView) Then
     If IsNull(cmb_BatchView) Then
- ' Use view to speed up query
+        ' Use view to speed up query
+        ' This query filters patients based on the user selected status
         subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
             " FROM s87020_ListWESSamples_view  " & _
             " WHERE " & includeReferrals_view & " AND s87020_ListWESSamples_view.StatusID = " & CStr(Me![cmb_StatusView]) & " " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
             
-        'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
         Call update_display
         Me.txt_displayed = Me.txt_displayed & " with status: " + Me![cmb_StatusView].Column(1)
@@ -471,12 +454,12 @@ If Not IsNull(cmb_StatusView) Then
     ' else display the subform filtered on batch and status option if a status has aready been selected
     Else
        ' Use view to speed up query
+       ' This query filters patients based on the user selected status and user selected batch number
         subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
             " FROM s87020_ListWESSamples_view " & _
             " WHERE " & includeReferrals_view & " And ((s87020_ListWESSamples_view.StatusID) = " & CStr(cmb_StatusView) & ") And s87020_ListWESSamples_view.NGSWESBatchID = " & CStr(Me![cmb_BatchView]) & " " & _
             " ORDER BY s87020_ListWESSamples_view.Priority, s87020_ListWESSamples_view.DateRequested;"
       
-        'Debug.Print subfrmSQL
         [Form_s87020_ExomeLabList_view].Form.RecordSource = subfrmSQL
         Call update_display
         Me.txt_displayed = Me.txt_displayed & " in batch " + Me![cmb_BatchView].Column(1) + " with status " + Me![cmb_StatusView].Column(1)
@@ -529,9 +512,9 @@ Call Unselect
     Me.cmb_BatchView.Value = Null
     Me.cmb_StatusView.Value = Null
     
-' reload subform calling querey to view samples are assigned to selected status
-' if WES batch filter = null do normal SQL
  ' Use view to speed up query
+ ' This query finds all the patients from the view which are penindg approval
+ ' Authorisation = 1202218814 and Authorisation(test failed) = 1202218854
 subfrmSQL = "SELECT s87020_ListWESSamples_view.* " & _
         " FROM s87020_ListWESSamples_view  " & _
         " WHERE " & includeReferrals_view & " AND s87020_ListWESSamples_view.StatusID = 1202218814 Or s87020_ListWESSamples_view.StatusID = 1202218815 " & _
@@ -614,8 +597,7 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
         strCriteria = " WESBatch = '" & Me.cmb_BatchAssign.Column(1) & "'"
         batchTotal = DCount("WESBatch", "s87020_ListWESSamples_view", strCriteria)
         ttotal = selTotal + batchTotal
-        'Debug.Print "batch " & batchTotal
-        
+
         ' confirm user decision.
         If MsgBox(batchTotal & " tests already in WES Batch:  " & Me.cmb_BatchAssign.Column(1) & vbNewLine & vbNewLine & "You are about to assign an additional " & selTotal & " test(s) to batch " & Me.cmb_BatchAssign.Column(1) & vbNewLine & vbNewLine & Me.cmb_BatchAssign.Column(1) & " will total: " & ttotal & " WES tests" & vbNewLine & "This step can not be undone. Do you wish to proceed?", vbYesNo Or vbExclamation, "Assign to WES Batch?") = vbNo Then
             Cancel = True
@@ -641,15 +623,13 @@ ElseIf Not IsNull(Me.cmb_BatchAssign) And IsNull(Me.txt_NEWBatch) Then
                         strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) VALUES(" & rsAssign!InternalPatientID & ", 'NGS WES test: Status updated to NextSEQ sequencing for test requested " & rsAssign!DateRequested & " NGS testID " & rsAssign!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                         'update NGSlogmemo
                         strLogMemo = "INSERT INTO NGSLogMemo(InternalPatientID, Type, LinkID, LogMemoEntry, [Date], Login, PCName) VALUES(" + CStr(rsAssign!InternalPatientID) + ", 1, " + CStr(rsAssign!NGSTestID) + ",'NGS WES test status updated to: NextSEQ sequencing.' ,#" + dt + "#,'" + usr + "','" + cn + "')"
-                        'Debug.Print strLogMemo
-                        
+ 
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL strUpd8Batch
                         DoCmd.RunSQL strUpd8Status
                         DoCmd.RunSQL strLogSQL
                         DoCmd.RunSQL strLogSQL2
                         DoCmd.RunSQL strLogMemo
-                        'Debug.Print "insert sql"
                         DoCmd.SetWarnings True
                         .MoveNext
 
@@ -682,9 +662,7 @@ ElseIf IsNull(Me.cmb_BatchAssign) And Not IsNull(Me.txt_NEWBatch) Then
     Else
     '2) Add WES prefix then test if batch name has already been defined
     newbatch = "WES" + CStr(Me.txt_NEWBatch)
-    'Debug.Print newbatch
     strSQL = "SELECT * FROM NGSWESBatch WHERE BatchName = '" + newbatch + "'"
-    'Debug.Print strSQL
     Set db = CurrentDb
     Set rsWES = db.OpenRecordset(strSQL, dbOpenDynaset, dbSeeChanges)
         If rsWES.EOF Then 'checks entry is a unique name
@@ -829,7 +807,6 @@ cmp = VBA.Environ("COMPUTERNAME")
 usr = VBA.Environ("USERNAME")
 
 
-
 If Me.cmb_StatusUpdate = 4 Or Me.cmb_StatusUpdate = 1202218816 Then
     Cmb_Approver.Visible = True
 Else
@@ -842,12 +819,9 @@ If IsNull(Me.cmb_StatusUpdate) Then
     cmb_StatusUpdate.SetFocus
     Exit Sub
 Else
-    
-      strRef = "SELECT  NGSTest.ReferralID, NGSTest.NGSTestID " & _
+    strRef = "SELECT  NGSTest.ReferralID, NGSTest.NGSTestID " & _
                     "FROM NGSTest  " & _
                     " WHERE NGSTest.Selection= True;"
-
-
         Set db = CurrentDb
         Set rsRef = db.OpenRecordset(strRef, dbOpenDynaset, dbSeeChanges)
         With rsRef
@@ -872,10 +846,8 @@ Else
                 ' User wants to update all the people in the trio/duo with the same status, select them all
                 ElseIf Result = vbYes Then
                     With rsTestGroup
-                        Debug.Print rsTestGroup!NGSTestID
                         While Not .EOF
                             selSQL = "Update NGSTest SET selection = True WHERE NGSTest.NGSTestID = " & rsTestGroup!NGSTestID
-                            Debug.Print selSQL
                             DoCmd.SetWarnings False
                             DoCmd.RunSQL selSQL
                             DoCmd.SetWarnings True
@@ -904,7 +876,6 @@ Form![s87020_ExomeLabList_view]![StatusID].Requery
         Set db = CurrentDb
         Set rsStatus = db.OpenRecordset(strStatus, dbOpenDynaset, dbSeeChanges)
         With rsStatus
-        'Debug.Print rsStatus!InternalPatientID
             signedOffTest = 0 'tally if test has been signed off as completed/ failed
             InBatching = 0 ' tally tes which are already in batching stage to exclude from update
             SetBatching = 0 ' tally number of tests aready assigned to a Batch when attempting to batch assign status to 'Batching'
@@ -925,7 +896,6 @@ Form![s87020_ExomeLabList_view]![StatusID].Requery
 
                     ElseIf rsStatus!StatusID = 1202218803 Then
                         InBatching = InBtching + 1
-                        'Debug.Print "InBatching= " & InBatching
                         deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
@@ -934,7 +904,6 @@ Form![s87020_ExomeLabList_view]![StatusID].Requery
 
                     ElseIf Me.cmb_StatusUpdate.Column(0) = 1202218803 And Not IsNull(rsStatus!WESBatch) Then
                         SetBatching = SetBatching + 1
-                        'Debug.Print "SetBatching = " & SetBatching
                         deselSQL = "Update NGSTest SET selection = False WHERE NGSTest.NGSTestID = " & rsStatus!NGSTestID
                         DoCmd.SetWarnings False
                         DoCmd.RunSQL deselSQL
@@ -994,7 +963,6 @@ Form![s87020_ExomeLabList_view]![StatusID].Requery
                     selTotal = DCount("[Selection]", "s87020_ListWESSamples_view", "[Selection] = True")
                     Me.txt_SelectionCount = selTotal
                     Form![s87020_ExomeLabList_view]![Selection].Requery
-                    'Debug.Print "total tests remaining =" & selTotal
 
                     If IsNull(selTotal) Or selTotal = 0 Then
                         msgc = MsgBox("Sorry, No valid tests selected for status update", vbExclamation, "Attention")
@@ -1022,7 +990,7 @@ Form![s87020_ExomeLabList_view]![StatusID].Requery
                                                          "VALUES (" & rsStatus!InternalPatientID & ", 'Patient: Status changed to " + Me!cmb_StatusUpdate.Column(1) + ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                             ' strLogAprov = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) " & _
                                                            "VALUES (" & rsStatus!InternalPatientID & ", 'NGS WES test: Report approved by " & Me!Cmb_Approver.Column(0) & " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
-                                             Debug.Print strLogAprov
+                
                                              strLogSQL2 = "INSERT INTO PatientLog(InternalPatientID, LogEntry, [Date], Login, PCName) " & _
                                                           "VALUES (" & rsStatus!InternalPatientID & ", 'NGS WES test: Status updated to " + Me!cmb_StatusUpdate.Column(1) + " for test requested " & rsStatus!DateRequested & " NGS testID " & rsStatus!NGSTestID & ". ',#" + dt + "#,'" + usr + "','" + cmp + "')"
                                              'update NGSlogmemo
@@ -1080,6 +1048,10 @@ End Sub
 
 Private Sub btn_refresh_Click()
     Form!s87020_ExomeLabList_view.Requery
+End Sub
+Private Sub Form_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+
+
 End Sub
 
 Private Sub user_group_clear_Click()
