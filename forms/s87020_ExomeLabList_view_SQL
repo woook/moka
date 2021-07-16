@@ -1,0 +1,2 @@
+SELECT s87020_ListWESSamples_view.*
+FROM s87020_ListWESSamples_view;
