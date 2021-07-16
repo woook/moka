@@ -1,0 +1,2 @@
+SELECT dbo_v_WES_Dashboard.*
+FROM dbo_v_WES_Dashboard
